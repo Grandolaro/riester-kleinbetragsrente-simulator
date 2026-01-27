@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Riester-Kleinbetragsrente - Simulator</title>
+  <style>
+    :root{--bg:#f7f8fb;--card:#fff;--accent:#2b6cb0;--muted:#6b7280;--text:#111;--panel-gradient-start:#fff;--panel-gradient-end:#fbfdff;--row-odd:#fff;--row-even:#fbfdff;--border:#eef2f7;--input-border:#e6e9ee;--panel-background:#fbfdff}
+    @media (prefers-color-scheme: dark){
+      :root{--bg:#0b1116;--card:#0f1418;--accent:#4ea8ff;--muted:#9aa6b2;--text:#e6eef8;--panel-gradient-start:#0f1418;--panel-gradient-end:#091018;--row-odd:#0d1216;--row-even:#0b1014;--border:rgba(255,255,255,0.06);--input-border:rgba(255,255,255,0.06);--panel-background:#0d141a}
+    }
+    :root[data-theme="light"]{--bg:#f7f8fb;--card:#fff;--accent:#2b6cb0;--muted:#6b7280;--text:#111;--panel-gradient-start:#fff;--panel-gradient-end:#fbfdff;--row-odd:#fff;--row-even:#fbfdff;--border:#eef2f7;--input-border:#e6e9ee;--panel-background:#fbfdff}
+    :root[data-theme="dark"]{--bg:#0b1116;--card:#0f1418;--accent:#4ea8ff;--muted:#9aa6b2;--text:#e6eef8;--panel-gradient-start:#0f1418;--panel-gradient-end:#091018;--row-odd:#0d1216;--row-even:#0b1014;--border:rgba(255,255,255,0.06);--input-border:rgba(255,255,255,0.06);--panel-background:#0d141a}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text)}
+    .wrap{max-width:980px;margin:1rem auto;padding:1rem}
+    .pageSpacer{height:2.5rem}
+    .card{background:var(--card);border-radius:10px;padding:1rem;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+    h1{font-size:1.1rem;margin:.2rem 0 .8rem}
+    label{display:block;font-size:.85rem;color:var(--muted);margin:0 0 .4rem}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;align-items:start}
+    /* input wrapper (no currency prefix) */
+    .input-suffix{position:relative;display:inline-flex;align-items:center}
+    .input-suffix input{flex:1;box-sizing:border-box;min-width:0}
+    input[type=number], button{padding:.6rem .7rem;border-radius:8px;border:1px solid var(--input-border);font-size:.95rem;box-sizing:border-box}
+    button{background:var(--accent);color:#fff;border:none;cursor:pointer;flex:0 0 auto;white-space:nowrap}
+    .small{width:140px}
+    input.small{width:100%}
+    /* make inputs fill their grid cell; avoid flex-growth that caused tall fields */
+    .full{width:100%;min-width:140px}
+    .col{min-width:160px}
+    .form-grid > *{margin:0}
+    .field input{width:100%;}
+    .field{display:flex;flex-direction:column}
+    /* actions: always span full row and appear under form fields */
+    .actions{display:flex;gap:.5rem;align-items:center;grid-column:1/-1;justify-self:start;margin-top:.35rem}
+    .tableWrap{overflow:auto;margin-top:1rem}
+    /* base table styles consolidated below */
+    th,td{padding:.5rem .6rem;text-align:right;border-bottom:none;font-variant-numeric:tabular-nums}
+    th{background:linear-gradient(180deg,var(--panel-gradient-start),var(--panel-gradient-end));text-align:right;font-weight:600;color:var(--muted);font-size:.85rem}
+    th:first-child,td:first-child{text-align:left}
+    th:first-child, td:first-child {font-size:.85rem}
+    .muted{color:var(--muted);font-size:.9rem}
+    @media (max-width:520px){.form-grid{grid-template-columns:1fr}.small{width:100%}}
+    .highlightField{border-left:3px solid var(--accent);padding-left:.6rem;border-radius:6px;background:linear-gradient(180deg,rgba(43,108,176,0.03),transparent);}
+    /* limit width of individual form fields on wide screens */
+    .form-grid .field{max-width:380px}
+    /* visually separate the predicted-capital row but allow it to expand to full width */
+    .separateRow{grid-column:1/-1;margin-top:.8rem;padding:.6rem;border-radius:8px;justify-self:stretch;max-width:none;width:100%}
+    .separateRow .input-suffix{width:100%;max-width:360px}
+    .separateRow .full{max-width:360px}
+    .predictedRow .input-suffix{max-width:260px;width:100%}
+    .predictedRow input{width:100%;max-width:260px}
+
+    /* Specific input widths tuned to content */
+    input#rentenJahr{width:100px;max-width:100px}
+    /* Rentenfaktor: show e.g. "xx,x" -> keep compact */
+    input#rentenFaktor{width:72px;max-width:72px}
+    /* Predicted capital: allow up to 8 digits, keep compact */
+    input#predictedCapital{width:140px;max-width:140px}
+
+    .predictedContainer{margin-top:.6rem;display:flex;justify-content:flex-start;gap:.75rem;align-items:center}
+    .predictedContainer label{white-space:normal}
+
+    /* Heatmap box responsiveness */
+    .heatmapBox{box-sizing:border-box;max-width:100%;padding:.4rem}
+    .heatmapBox .legend{flex-wrap:wrap;gap:.5rem}
+    .heatmapBox .swatch{width:60px;height:14px}
+    /* visually separate the predicted-capital control from the legend */
+    .heatmapBox .legend{margin-bottom:.5rem}
+    /* do not render a separate card for the predicted field; only add spacing */
+    .heatmapBox .predictedContainer{margin-top:.6rem;padding-top:.25rem;max-width:420px}
+
+    /* Table improvements */
+    caption{caption-side:top;text-align:left;font-weight:600;padding-bottom:.35rem}
+    /* semantic table title (rendered above the scroll container) */
+    .tableTitle{font-size:.95rem;font-weight:600;margin:0 0 .35rem}
+    table{border-collapse:collapse;width:100%;min-width:540px}
+    /* sticky table header */
+    thead th{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--panel-gradient-start),var(--panel-gradient-end));box-shadow:0 2px 6px rgba(16,24,40,0.03)}
+    /* sticky first column - place above other header cells so it remains visible while horizontally scrolling */
+    th:first-child, td:first-child{position:sticky;left:0;background:linear-gradient(180deg,var(--panel-gradient-start),var(--panel-gradient-end));z-index:12;text-align:left}
+    /* ensure top-left corner (header cell in first column) stays highest */
+    thead th:first-child{left:0;top:0;z-index:14}
+      @media (min-width:720px){
+        th:first-child, td:first-child{max-width:12ch;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+      }
+    tbody tr:nth-child(odd) td{background: var(--row-odd)}
+    tbody tr:nth-child(even) td{background: var(--row-even)}
+    /* Make collapsible details boxes able to span the full width like the main formula box */
+    details.advanced{background:linear-gradient(180deg,var(--panel-gradient-start), var(--panel-gradient-end));border:1px solid var(--border);padding:.5rem;border-radius:8px;display:block;width:100%;box-sizing:border-box}
+    /* Allow 'separateRow' variant to also expand; remove tight max-width so it can span full width when placed in the layout */
+    details.advanced.separateRow{max-width:none;justify-self:stretch;width:100%}
+    details.advanced summary{font-size:.95rem;display:list-item;list-style-position:inside;text-align:left;cursor:pointer}
+    /* ensure disclosure marker is visible across browsers */
+    details.advanced summary::-webkit-details-marker{display:inline-block}
+    details.advanced summary::marker{display:inline-block}
+    /* heatmap legend */
+    .legend{display:flex;flex-direction:column;gap:.5rem;align-items:flex-start;margin-top:.6rem;font-size:.9rem}
+    .legend .swatch{width:120px;height:14px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)}
+    .legend .label{min-width:60px;color:var(--muted)}
+    .legend-item{display:flex;gap:.5rem;align-items:center}
+    .legend-row{display:flex;gap:.5rem;align-items:center}
+    .optionalNote{font-size:.85rem;color:var(--muted);margin-top:.25rem;font-style:italic;padding-left:.6rem;border-left:3px solid rgba(43,108,176,0.12);}
+    /* Math / formula styling: use MathML containers instead of pre blocks */
+      .mathBlock{display:block;margin:0 0 .6rem;line-height:1.6}
+    .mathFormula{font-family:inherit;font-size:1rem}
+    /* example container has box styling; individual math lines match formula spacing */
+      .mathBlockContainer{background:var(--panel-background);padding:.45rem .6rem;border-radius:6px;border:1px solid var(--border);margin-top:.4rem}
+    
+
+    /* MathML: enable wrapping on narrow viewports */
+    math, .mathFormula, .mathBlock {
+      display: block;
+      max-width: 100%;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      -webkit-hyphens: auto;
+      hyphens: auto;
+    }
+    .formulaWrap{display:block}
+    /* Allow muted explanatory text and table cells to wrap instead of forcing horizontal scroll */
+    .muted{color:var(--muted);font-size:.9rem;white-space:normal}
+    @media (max-width:520px){
+      .predictedContainer{flex-direction:column;align-items:flex-start}
+      .predictedRow .input-suffix{max-width:100%}
+      .predictedRow input{width:100%;max-width:100%}
+      /* keep the year input compact on small screens; other compact inputs keep configured widths */
+      .actions{justify-self:start}
+      .form-grid .field{max-width:100%}
+      .heatmapBox .legend{flex-direction:row;flex-wrap:wrap}
+      /* Keep table horizontally scrollable on narrow viewports (do not remove min-width). */
+    }
+    @media (max-width:420px){
+      /* Allow advanced details with separateRow to still expand to full width on small screens */
+      details.advanced.separateRow{max-width:none;padding:.4rem;width:100%;box-sizing:border-box}
+      .heatmapBox .swatch{width:40px}
+      .legend .label{min-width:40px}
+      .legend{font-size:.85rem}
+    }
+
+    /* Allow advanced details content to scroll horizontally */
+    details.advanced > div {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
+    /* Ensure inner formula wrapper can shrink if needed while allowing scroll */
+    details.advanced .formulaWrap {
+      min-width: 0;
+    }
+    /* Reduce formula font-size and tighten spacing on very narrow viewports for readability */
+    @media (max-width:480px){
+      .mathFormula, .mathBlock { font-size:0.85rem; line-height:1.45 }
+      .mathBlockContainer { padding:.33rem .44rem }
+    }
+    @media (max-width:360px){
+      .mathFormula, .mathBlock { font-size:0.78rem; line-height:1.35 }
+      .mathBlockContainer { padding:.28rem .38rem }
+    }
+    @media (max-width:450px){
+      .predictedRow input{max-width:100%}
+      .predictedContainer{padding-right:.5rem}
+      .heatmapBox .swatch{width:40px}
+    }
+    /* Selected cell styling and keyboard affordance
+       Use box-shadow instead of outline so the highlight precisely follows cell edges
+       and can sit above table borders. Slight radius for a softer look. */
+    /* Use a pseudo-element to draw an exact border that doesn't affect layout */
+    td.selectedCell{
+      position:relative;
+      border-radius:0;
+    }
+    td.selectedCell::after{
+      content: "";
+      position: absolute;
+      inset: 0; /* top:0; right:0; bottom:0; left:0 */
+      box-sizing: border-box;
+      border: 3px solid var(--accent);
+      box-shadow: 0 10px 30px rgba(43,108,176,0.22);
+      pointer-events: none;
+      /* keep the highlight BELOW the sticky first column (which has z-index:12)
+         by using a small z-index here and avoiding a z-index on the cell itself
+         (which would create a stacking context and always appear above). */
+      z-index: 3;
+    }
+    /* Make keyboard-focusable/data cells show a pointer and use the same visible ring on focus */
+    td[tabindex]{cursor:pointer}
+    td[tabindex]:focus{position:relative;border-radius:0}
+    td[tabindex]:focus::after{content:"";position:absolute;inset:0;box-sizing:border-box;border:3px solid var(--accent);box-shadow:0 10px 30px rgba(43,108,176,0.22);pointer-events:none;z-index:3}
+    /* Input invalid state for year field */
+    input.invalid{border-color:#b91c1c !important;box-shadow:0 0 0 4px rgba(185,28,28,0.06);}
+    /* Dark-mode input appearance: apply when system prefers dark */
+    @media (prefers-color-scheme: dark) {
+      input[type=number], input[type=text], input, select, textarea, .input-suffix input {
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border-color: var(--input-border);
+        color: var(--text);
+      }
+      ::placeholder { color: rgba(230,238,248,0.45); }
+    }
+    /* And also when user explicitly selects dark theme */
+    :root[data-theme="dark"] input[type=number], :root[data-theme="dark"] input[type=text], :root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea, :root[data-theme="dark"] .input-suffix input {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-color: var(--input-border);
+      color: var(--text);
+    }
+    :root[data-theme="dark"] ::placeholder { color: rgba(230,238,248,0.45); }
+    /* Light-mode placeholder: increase contrast for readability */
+    :root[data-theme="light"] ::placeholder { color: rgba(17,24,39,0.55); }
+    /* Ensure 'auto' follows OS light setting */
+    @media (prefers-color-scheme: light) {
+      ::placeholder { color: rgba(17,24,39,0.55); }
+    }
+    /* Dark-theme: improve link contrast and focus state for readability */
+    /* Apply same link styles when OS prefers dark mode so rules work with `auto` theme. */
+    @media (prefers-color-scheme: dark) {
+      a { color: #7ecbff; }
+      a:visited { color: #7ecbff; }
+      a:hover, a:focus, a:focus-visible {
+        color: #bfe9ff;
+        text-decoration: underline;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(126,203,255,0.12);
+        border-radius: 4px;
+      }
+    }
+
+    /* Explicit link color for Light mode (visited uses same color) */
+    :root[data-theme="light"] a,
+    :root[data-theme="light"] a:visited {
+      color: var(--accent);
+    }
+    :root[data-theme="light"] a:hover,
+    :root[data-theme="light"] a:focus,
+    :root[data-theme="light"] a:focus-visible {
+      color: var(--accent);
+      text-decoration: underline;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(43,108,176,0.12);
+      border-radius: 4px;
+    }
+    /* Ensure 'auto' follows OS light setting with the same explicit color */
+    @media (prefers-color-scheme: light) {
+      a, a:visited { color: var(--accent); }
+      a:hover, a:focus, a:focus-visible { color: var(--accent); text-decoration: underline; box-shadow: 0 0 0 3px rgba(43,108,176,0.12); border-radius:4px; }
+    }
+
+    :root[data-theme="dark"] a { color: #7ecbff; }
+    :root[data-theme="dark"] a:visited { color: #7ecbff; }
+    :root[data-theme="dark"] a:hover,
+    :root[data-theme="dark"] a:focus,
+    :root[data-theme="dark"] a:focus-visible {
+      color: #bfe9ff;
+      text-decoration: underline;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(126,203,255,0.12);
+      border-radius: 4px;
+    }
+  </style>
+  <script>
+  (function(){
+    const KEY = 'rk_theme_pref';
+    function applyTheme(pref){
+      if(pref === 'auto' || !pref){
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', pref);
+      }
+    }
+    try{
+      const pref = localStorage.getItem(KEY) || 'auto';
+      applyTheme(pref);
+      window.__rkApplyTheme = function(p){ applyTheme(p); try{ localStorage.setItem(KEY,p);}catch(e){} };
+      document.addEventListener('DOMContentLoaded', function(){
+        const sel = document.getElementById('themeSelect');
+        if(sel){ sel.value = localStorage.getItem(KEY) || 'auto'; sel.addEventListener('change', function(){ window.__rkApplyTheme(sel.value); }); }
+      });
+    }catch(e){}
+  })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div style="overflow:hidden;margin-bottom:.4rem">
+        <h1 style="margin:0;float:left">Riester-Kleinbetragsrente - Simulator</h1>
+        <div class="themeControl" style="float:right">
+          <label for="themeSelect" class="muted" style="display:inline-flex;align-items:center;gap:.4rem;margin:0">Theme
+            <select id="themeSelect" aria-label="Theme" style="padding:.35rem .5rem;border-radius:6px;border:1px solid var(--input-border);background:var(--card);color:var(--text)">
+              <option value="auto">Auto</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="muted">Viele Sparer mit kleinen Riester‑Guthaben fragen sich, ob eine einmalige Auszahlung als Kleinbetragsrente möglich ist.</div>
+      <div class="muted" style="margin-top:.4rem">Rechtsgrundlage und Bezugsgröße: Für 2026 beträgt die Bezugsgröße in der Sozialversicherung <strong>47.460&nbsp;€</strong> jährlich (<strong>3.955&nbsp;€</strong> monatlich). Quellen: <a href="https://www.bmas.de/DE/Service/Gesetze-und-Gesetzesvorhaben/sozialversicherungs-rechengroessenverordnung-2026.html" target="_blank" rel="noopener">BMAS</a> und <a href="https://www.gesetze-im-internet.de/sgb_4/__18.html" target="_blank" rel="noopener">§ 18 SGB IV</a>.</div>
+      <div class="muted" style="margin-top:.4rem">Grenze für die Kleinbetragsrente: Gemäß § 93 Abs. 3 EStG beträgt die monatliche Grenze 1&nbsp;% der Bezugsgröße. Für 2026 entspricht das <strong>39,55&nbsp;€</strong> monatlich. Quelle: <a href="https://www.gesetze-im-internet.de/estg/__93.html" target="_blank" rel="noopener">§ 93 EStG</a>.</div>
+      <div class="muted" style="margin-top:.4rem">Der Rentenfaktor gibt an, wie viel Euro monatliche Rente 10.000&nbsp;€ Kapital erzeugen (z. B. Faktor 30 → bei 40.000&nbsp;€ Kapital = 120&nbsp;€ monatlich). Der Simulator verwendet standardmäßig den Rentenfaktor <strong>27,0</strong>; dieser Wert lässt sich anpassen.</div>
+      <div class="muted" style="margin-top:.4rem">Der Simulator spielt mehrere Szenarien durch: Er kombiniert unterschiedliche jährliche Entwicklungen von Rentenfaktor und Bezugsgröße und berechnet jeweils die maximal zulässigen Kapitalbeträge . Nur wenn das Kapital zum Renteneintritt unter dieser Grenze liegt, ist eine einmalige Auszahlung möglich.</div>
+      <div class="muted optionalNote" style="margin-top:.25rem">Tipp: Die Kleinbetragsregelung gilt pro Versicherer. Wenn ein Vertrag knapp an der Grenze liegt, kann ein zusätzlicher Vertrag bei einem anderen Anbieter eine Auszahlung ermöglichen — vorausgesetzt, die Anbieter fusionieren nicht bzw. geben Verträge nicht an dieselbe Abwicklungsgesellschaft weiter.</div>
+
+
+      <details id="explanationCalc" class="advanced separateRow" open style="margin-top:.4rem">
+        <summary style="cursor:pointer;font-weight:600">Berechnung</summary>
+        <div class="mathBlockContainer" style="margin-top:.4rem">
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Grenze für Kleinbetragsrente 2026</mi><mo>=</mo><mfrac><mrow><mi>Jahresbezugsgröße Sozialversicherung</mi></mrow><mrow><mn>12</mn></mrow></mfrac><mo>·</mo><mn>0,01</mn></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Jahre bis Renteneintritt</mi><mo>=</mo><mi>Jahr des Renteneintritts</mi><mo>−</mo><mn>2026</mn></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierter Rentenfaktor</mi><mo>=</mo><mi>Rentenfaktor 2026</mi><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mi>Wachstumsrate Rentenfaktor</mi><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mi>Jahre bis Renteneintritt</mi></msup></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi><mo>=</mo><mi>Grenze für Kleinbetragsrente 2026</mi><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mi>Wachstumsrate Bezugsgröße</mi><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mi>Jahre bis Renteneintritt</mi></msup></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Maximales Kapital</mi><mo>=</mo><mfrac><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi></mrow><mrow><mi>Projektierter Rentenfaktor</mi><mo>/</mo><mn>10000</mn></mrow></mfrac></mrow></math></div>
+        </div>
+      </details>
+
+
+      
+
+      <div style="margin-top:1rem">
+        <div class="form-grid">
+          <div class="field">
+            <label for="rentenJahr">Jahr des Renteneintritts *</label>
+            <div class="small">
+              <input id="rentenJahr" type="number" value="2035" min="2026" max="2100">
+            </div>
+          </div>
+          <div id="yearWarning" role="alert" aria-live="assertive" style="display:none;color:#b91c1c;margin-top:.15rem;font-weight:600;font-size:.85rem;grid-column:1/-1">Der Simulator funktioniert nur für Renteneintrittsjahre ab 2026.</div>
+
+          <details class="advanced separateRow" style="margin-top:.6rem; grid-column:1/-1">
+            <summary style="cursor:pointer;font-weight:600">Erweiterte Optionen</summary>
+            <div style="margin-top:.6rem; display:grid; grid-template-columns:1fr; gap:.5rem; align-items:start">
+              <div class="field col">
+                <label for="rentenFaktor">Rentenfaktor 2026 in €/10.000&nbsp;€ pro Monat</label>
+                <div class="input-suffix">
+                  <input id="rentenFaktor" type="number" class="full" value="27" step="0.1" min="0" max="999.9">
+                  <button id="resetFaktor" type="button" style="margin-left:.5rem;background:#ef4444">Zurücksetzen</button>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          
+        </div>
+      </div>
+
+        <details class="advanced separateRow" open style="margin-top:.6rem">
+          <summary style="cursor:pointer;font-weight:600">Heatmap</summary>
+          <div class="heatmapBox" style="margin-top:.5rem">
+            <div class="legend" id="heatmapLegend" aria-hidden="true">
+              <div class="legend-item"><div class="swatch" style="background: linear-gradient(90deg, hsl(0,80%,90%), hsl(0,80%,50%));"></div><div class="label">Grenze für Kleinbetragsrente überschritten</div></div>
+              <div class="legend-item"><div class="swatch" style="background: linear-gradient(90deg, hsl(120,60%,90%), hsl(120,60%,45%));"></div><div class="label">Grenze für Kleinbetragsrente eingehalten</div></div>
+            </div>
+
+            <div class="predictedContainer predictedRow" style="margin-top:.25rem">
+              <div class="field">
+                <label for="predictedCapital">Voraussichtliches Kapital zum Renteneintritt</label>
+                <div class="input-suffix">
+                  <input id="predictedCapital" type="number" class="full" placeholder="z.B. 20000" step="100" min="0" max="99999999" aria-describedby="predictedHelp">
+                </div>
+              </div>
+            </div>
+            <div id="predictedHelp" class="muted" style="margin-top:.35rem; font-size:.85rem">Dieses Feld dient ausschließlich zur farblichen Hervorhebung der Matrixzellen; es ändert die Werte der Matrix nicht.</div>
+            <div class="optionalNote" style="margin-top:.4rem">Hinweis: Der Simulator verzichtet bewusst auf eine Unterstützung zur Berechnung des voraussichtlichen Kapitals zum Renteneintritt. Dafür eignen sich z.B. der <a href="https://www.zinsen-berechnen.de/zinsrechner.php" target="_blank" rel="noopener">Zinsrechner für einmalige Geldanlage</a> oder der <a href="https://www.zinsen-berechnen.de/sparrechner.php" target="_blank" rel="noopener">Sparrechner für regelmäßige Sparraten</a> auf zinsen-berechnen.de.</div>
+          </div>
+        </details>
+      <div class="tableWrap" id="result" aria-live="polite"></div>
+      <details id="tableCalc" class="advanced separateRow" aria-live="polite" style="margin-top:.6rem; display:none">
+        <summary style="cursor:pointer;font-weight:600">Erläuterung der Berechnung</summary>
+        <div id="tableCalcInner" class="mathBlockContainer" style="margin-top:.4rem"></div>
+      </details>
+    </div>
+  </div>
+  <div class="pageSpacer" aria-hidden="true"></div>
+
+  <script>
+  (function () {
+    // Kapselung: Keine globalen Variablen
+    // Defaults (wie im Java-Skript)
+    const START_JAHR = 2026;
+    const BEZUGS_GROESSE_2026 = 47460.0; // Jahresbezugsgröße (Referenz)
+    // Grenze für Kleinbetragsrente B_2026 (1% der monatlichen Bezugsgröße für 2026): 47460 / 1200 = 39.55 €
+    const B_2026 = BEZUGS_GROESSE_2026 / 1200.0;
+    const FAKTOR_ENTWICKLUNG = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0];
+    const BEZUGS_ENTWICKLUNG = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+
+    // Cached DOM elements to avoid repeated lookups
+    const el = {
+      result: document.getElementById('result'),
+      predicted: document.getElementById('predictedCapital'),
+      rentenJahr: document.getElementById('rentenJahr'),
+      rentenFaktor: document.getElementById('rentenFaktor'),
+      tableCalc: document.getElementById('tableCalc'),
+      tableCalcInner: document.getElementById('tableCalcInner'),
+      yearWarning: document.getElementById('yearWarning')
+    };
+
+    // Format-Helper
+    const fmt = n => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(n);
+    const fmtNum = (n, digits = 2) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
+    const fmtPerc = (n, digits = 1) => new Intl.NumberFormat('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
+
+    // Debounce-Helfer
+    function debounce(fn, wait) {
+      let t = null;
+      return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    }
+
+    // Kernberechnungen (keine Verhaltensänderung)
+    // Hinweis: Projektierte Grenze für Kleinbetragsrente (Grenze für Kleinbetragsrente). Basiswert Grenze für Kleinbetragsrente 2026 ist definiert als
+    // (Jahresbezugsgröße / 12) · 0.01 (z.B. 39.55 € für 2026). Projektierte Grenze für Kleinbetragsrente = Grenze für Kleinbetragsrente 2026 · (1 + Wachstumsrate Bezugsgröße / 100)^y
+    function computeMatrix(rentenJahr, rentenFaktor2026) {
+      const years = rentenJahr - START_JAHR; // rentenJahr is validated to be >= START_JAHR
+      const faktorValues = FAKTOR_ENTWICKLUNG.map(p => rentenFaktor2026 * Math.pow(1 + p / 100.0, years));
+      const bezugsValues = BEZUGS_ENTWICKLUNG.map(p => BEZUGS_GROESSE_2026 * Math.pow(1 + p / 100.0, years));
+
+      const matrix = FAKTOR_ENTWICKLUNG.map((_, i) => {
+        return BEZUGS_ENTWICKLUNG.map((_, j) => {
+          const faktor = faktorValues[i];
+          const bezugs = bezugsValues[j];
+          // monthlyThreshold computed from base B_2026 grown by bezugs-Rate:
+          const monthlyThreshold = B_2026 * Math.pow(1 + BEZUGS_ENTWICKLUNG[j] / 100.0, years);
+          const maxKapital = monthlyThreshold / (faktor / 10000.0);
+          return Math.round(maxKapital);
+        });
+      });
+
+      return { faktorValues, bezugsValues, matrix };
+    }
+
+    function renderTable(rentenJahr, rentenFaktor2026) {
+      const predicted = el.predicted ? parseFloat(el.predicted.value) : NaN;
+      const { faktorValues, bezugsValues, matrix } = computeMatrix(rentenJahr, rentenFaktor2026);
+      const container = el.result;
+      if (!container) return;
+
+      const tbl = document.createElement('table');
+      const thead = document.createElement('thead');
+      const thr = document.createElement('tr');
+
+      const thLabel = document.createElement('th');
+      thLabel.textContent = 'Rentenfaktor / Grenze für Kleinbetragsrente';
+      thr.appendChild(thLabel);
+
+      const years = rentenJahr - START_JAHR; // rentenJahr validated to be >= START_JAHR
+      BEZUGS_ENTWICKLUNG.forEach((bRate, j) => {
+        const th = document.createElement('th');
+        const monthlyThreshold = B_2026 * Math.pow(1 + bRate / 100.0, years);
+        th.innerHTML = `${fmtPerc(bRate)}% <div class="muted">(${fmtNum(monthlyThreshold,2)}\u00A0€)</div>`;
+        thr.appendChild(th);
+      });
+      thead.appendChild(thr);
+      tbl.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      FAKTOR_ENTWICKLUNG.forEach((fRate, i) => {
+        const tr = document.createElement('tr');
+        const tdLabel = document.createElement('td');
+        tdLabel.innerHTML = `${fmtPerc(fRate)}% <div class="muted">(${fmtNum(faktorValues[i], 2)})</div>`;
+        tr.appendChild(tdLabel);
+        matrix[i].forEach((val, j) => {
+          const td = document.createElement('td');
+          td.textContent = fmt(val) + '\u00A0€';
+          td.dataset.value = String(val);
+          // make cell keyboard-focusable and attach handlers to open calculation box
+          td.setAttribute('tabindex', '0');
+          td.addEventListener('click', () => {
+            const tableCalc = el.tableCalc;
+            const tableCalcInner = el.tableCalcInner;
+            const already = td.classList.contains('selectedCell');
+            // If this cell is already selected -> toggle off and hide calculation
+            if (already) {
+              td.classList.remove('selectedCell');
+              // remove keyboard focus so focus-based ring (::after) disappears
+              try { td.blur(); } catch (e) {}
+              if (tableCalcInner) tableCalcInner.innerHTML = '';
+              if (tableCalc) { tableCalc.style.display = 'none'; tableCalc.open = false; }
+              return;
+            }
+            // Otherwise select this cell and render calculation for it
+            const prev = document.querySelector('td.selectedCell'); if (prev) { prev.classList.remove('selectedCell'); try { prev.blur(); } catch(e) {} }
+            td.classList.add('selectedCell');
+            renderTableCalculation(rentenJahr, rentenFaktor2026, FAKTOR_ENTWICKLUNG[i], BEZUGS_ENTWICKLUNG[j]);
+            if (tableCalc) tableCalc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          td.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              const tableCalc = el.tableCalc;
+              const tableCalcInner = el.tableCalcInner;
+              const already = td.classList.contains('selectedCell');
+              if (already) {
+                td.classList.remove('selectedCell');
+                try { td.blur(); } catch (e) {}
+                if (tableCalcInner) tableCalcInner.innerHTML = '';
+                if (tableCalc) { tableCalc.style.display = 'none'; tableCalc.open = false; }
+                return;
+              }
+              const prev = document.querySelector('td.selectedCell'); if (prev) { prev.classList.remove('selectedCell'); try { prev.blur(); } catch(e) {} }
+              td.classList.add('selectedCell');
+              renderTableCalculation(rentenJahr, rentenFaktor2026, FAKTOR_ENTWICKLUNG[i], BEZUGS_ENTWICKLUNG[j]);
+              if (tableCalc) tableCalc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+
+      container.innerHTML = '';
+      container.appendChild(tbl);
+      // Ensure no calculation is shown by default (only when a cell is selected)
+      const tableCalc = el.tableCalc; if (tableCalc) { const inner = el.tableCalcInner; if (inner) inner.innerHTML = ''; tableCalc.style.display = 'none'; tableCalc.open = false; }
+
+      // Apply heatmap coloring after table insertion
+      updateHeatmap(predicted);
+    }
+
+    // Example helper removed: no #examplePre element exists in the page,
+    // so renderExample() was unused and removed to keep the codebase tidy.
+
+    
+
+    // Update heatmap colors based on predicted capital value
+    function updateHeatmap(predicted) {
+      const tbl = document.querySelector('#result table');
+      const predictedVal = Number(predicted);
+      if (!tbl) return;
+      const rows = tbl.tBodies[0].rows;
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].cells;
+        for (let j = 1; j < cells.length; j++) {
+          const td = cells[j];
+          const val = Number(td.dataset.value);
+          td.style.backgroundColor = '';
+          td.style.color = '';
+          td.title = '';
+          if (!isNaN(predictedVal) && predictedVal > 0 && !isNaN(val)) {
+            const diff = predictedVal - val; // positive => predicted > allowed => risk (red)
+            const severity = Math.min(1, Math.abs(diff) / predictedVal);
+            const light = 90 - severity * 50;
+            if (diff > 0) {
+              td.style.backgroundColor = `hsl(0,80% , ${light}%)`;
+              td.style.color = severity > 0.5 ? '#fff' : '#000';
+            } else if (diff < 0) {
+              td.style.backgroundColor = `hsl(120,60% , ${light}%)`;
+              td.style.color = severity > 0.5 ? '#fff' : '#000';
+            }
+            td.title = `Diff: ${fmt(Math.abs(predictedVal - val))}\u00A0€ (${fmtPerc((Math.abs(predictedVal - val) / predictedVal) * 100)}%)`;
+          }
+        }
+      }
+    }
+
+    // Render the detailed calculation beneath the table using MathML.
+    // Defaults: rF = 1.0 (% p.a. for rentenfaktor), rB = 2.0 (% p.a. for bezugsgröße)
+    function renderTableCalculation(rentenJahr, rentenFaktor2026, rF = 1.0, rB = 2.0) {
+      const tableCalc = el.tableCalc; if (!tableCalc) return;
+      const tableCalcInner = el.tableCalcInner; if (!tableCalcInner) return;
+        // Ensure the calc box is visible when rendering a calculation
+        tableCalc.style.display = 'block';
+        tableCalc.open = true;
+        const years = rentenJahr - START_JAHR;
+        const projektierterRentenfaktor = rentenFaktor2026 * Math.pow(1 + rF / 100.0, years);
+        const projektierteGrenzeKleinbetragsrente = B_2026 * Math.pow(1 + rB / 100.0, years);
+        const maximalesKapital = Math.round(projektierteGrenzeKleinbetragsrente / (projektierterRentenfaktor / 10000.0));
+
+        // Clear inner container (summary heading resides in <summary>)
+        tableCalcInner.innerHTML = '';
+        const lines = [
+        `<math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Jahre bis Renteneintritt</mi><mo>=</mo><mn>${rentenJahr}</mn><mo>−</mo><mn>${START_JAHR}</mn><mo>=</mo><mn>${years}</mn></mrow></math>`,
+        `<math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierter Rentenfaktor</mi><mo>=</mo><mn>${fmtNum(rentenFaktor2026,2)}</mn><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mn>${fmtNum(rF,1)}</mn><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mn>${years}</mn></msup><mo>=</mo><mn>${fmtNum(projektierterRentenfaktor,2)}</mn></mrow></math>`,
+        `<math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi><mo>=</mo><mn>${fmtNum(B_2026,2)}&nbsp;€</mn><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mn>${fmtNum(rB,1)}</mn><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mn>${years}</mn></msup><mo>=</mo><mn>${fmtNum(projektierteGrenzeKleinbetragsrente,2)}&nbsp;€</mn></mrow></math>`,
+        `<math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Maximales Kapital</mi><mo>=</mo><mfrac><mrow><mn>${fmtNum(projektierteGrenzeKleinbetragsrente,2)}&nbsp;€</mn></mrow><mrow><mn>${fmtNum(projektierterRentenfaktor,2)}</mn><mo>/</mo><mn>10000</mn></mrow></mfrac><mo>=</mo><mn>${fmt(maximalesKapital)}&nbsp;€</mn></mrow></math>`
+      ];
+
+      lines.forEach(html => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mathBlock';
+        wrapper.innerHTML = html;
+        tableCalcInner.appendChild(wrapper);
+      });
+    }
+
+    // Event wiring (debounced)
+    const scheduleRender = debounce(() => {
+      const yEl = el.rentenJahr;
+      const fEl = el.rentenFaktor;
+      const y = yEl ? (parseInt(yEl.value, 10) || 2035) : 2035;
+      const f = fEl ? (parseFloat(fEl.value) || 27.0) : 27.0;
+      // Validate year: Simulator only supports years >= START_JAHR (2026)
+      const yearWarningEl = el.yearWarning;
+      if (yEl && parseInt(yEl.value, 10) < START_JAHR) {
+        if (yearWarningEl) {
+          yearWarningEl.textContent = `Der Simulator funktioniert nur für Renteneintrittsjahre ab ${START_JAHR}.`;
+          yearWarningEl.style.display = 'block';
+        }
+        // mark input visually
+        if (yEl) { yEl.classList.add('invalid'); yEl.setAttribute('aria-invalid','true'); }
+        const container = el.result; if (container) container.innerHTML = '';
+        const tableCalc = el.tableCalc; if (tableCalc) { const inner = el.tableCalcInner; if (inner) inner.innerHTML = ''; tableCalc.style.display = 'none'; tableCalc.open = false; }
+        return;
+      } else {
+        if (yearWarningEl) yearWarningEl.style.display = 'none';
+        if (yEl) { yEl.classList.remove('invalid'); yEl.removeAttribute('aria-invalid'); }
+      }
+      renderTable(y, f);
+    }, 600);
+
+    if (el.rentenJahr) el.rentenJahr.addEventListener('input', scheduleRender);
+    if (el.rentenFaktor) el.rentenFaktor.addEventListener('input', scheduleRender);
+
+    // Reset button for rentenFaktor: restore default and trigger render
+    const resetFaktorBtn = document.getElementById('resetFaktor');
+    if (resetFaktorBtn) {
+      resetFaktorBtn.setAttribute('aria-label', 'Rentenfaktor zurücksetzen');
+      resetFaktorBtn.addEventListener('click', () => {
+        if (el.rentenFaktor) {
+          el.rentenFaktor.value = 27.0;
+          scheduleRender();
+        }
+      });
+    }
+
+    // Heatmap update: debounce user input so colors update after a short pause
+    if (el.predicted) {
+      el.predicted.addEventListener('input', debounce((e) => {
+        const v = e.target.value;
+        updateHeatmap(v);
+      }, 600));
+    }
+
+    // initial render
+    renderTable(2035, 27.0);
+  })();
+  </script>
+</body>
+</html>
