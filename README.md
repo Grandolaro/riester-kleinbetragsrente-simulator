@@ -42,13 +42,22 @@ Die Anwendung zeigt:
 
 ## Fachliche Grundlage
 
+Wichtige Änderung:
+
+- Der Simulator unterstützt nur noch Rentenbeginn ab `2027`.
+- Für die Berechnung wird ausschließlich die angehobene Grenze von `1,5 %` der monatlichen Bezugsgröße verwendet.
+- Frühere Berechnungen mit `1,0 %` werden in diesem Tool nicht mehr unterstützt.
+
 Die aktuelle Berechnung verwendet im Code folgende Startwerte:
 
 - `START_JAHR = 2026`
+- `MIN_RENTENJAHR = 2027`
 - `BEZUGS_GROESSE_2026 = 47.460 €`
-- monatliche Grenze für die Kleinbetragsrente 2026: `39,55 €`
+- monatliche Grenze für die Kleinbetragsrente ab 2027 bei unveränderter Bezugsgröße: `59,33 €`
 
 Zusätzlich wird mit einem anpassbaren Rentenfaktor für 2026 gearbeitet. Standardwert in der Oberfläche ist `27,0`.
+
+Die Umstellung auf `1,5 %` orientiert sich an der im Regierungsentwurf zum Altersvorsorgereformgesetz vom 1. Dezember 2025 beschriebenen Anhebung der Kleinbetragsgrenze in `§ 93 Abs. 3 EStG`, die ab `1. Januar 2027` berücksichtigt wird.
 
 Vereinfacht gilt:
 
@@ -77,3 +86,5 @@ Es ist kein Build-Schritt erforderlich.
 
 - Der Simulator ist ein vereinfachtes Szenario-Werkzeug und keine Rechts- oder Steuerberatung.
 - Bei fachlichen Änderungen an Grenzwerten oder Rechtsgrundlagen sollten UI-Texte und Konstanten gemeinsam aktualisiert werden.
+- Für die fachliche Einordnung der 1,5-%-Grenze siehe auch den BMF-Regierungsentwurf vom 1. Dezember 2025:
+  `https://www.bundesfinanzministerium.de/Content/DE/Gesetzestexte/Gesetze_Gesetzesvorhaben/Abteilungen/Abteilung_IV/21_Legislaturperiode/2025-12-01-Altersvorsorgereformgesetz/2-Regierungsentwurf.pdf?__blob=publicationFile&v=2`

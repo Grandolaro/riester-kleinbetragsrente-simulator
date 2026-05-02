@@ -298,7 +298,8 @@
       </div>
       <div class="muted">Viele Sparer mit kleinen Riester‑Guthaben fragen sich, ob eine einmalige Auszahlung als Kleinbetragsrente möglich ist.</div>
       <div class="muted" style="margin-top:.4rem">Rechtsgrundlage und Bezugsgröße: Für 2026 beträgt die Bezugsgröße in der Sozialversicherung <strong>47.460&nbsp;€</strong> jährlich (<strong>3.955&nbsp;€</strong> monatlich). Quellen: <a href="https://www.bmas.de/DE/Service/Gesetze-und-Gesetzesvorhaben/sozialversicherungs-rechengroessenverordnung-2026.html" target="_blank" rel="noopener">BMAS</a> und <a href="https://www.gesetze-im-internet.de/sgb_4/__18.html" target="_blank" rel="noopener">§ 18 SGB IV</a>.</div>
-      <div class="muted" style="margin-top:.4rem">Grenze für die Kleinbetragsrente: Gemäß § 93 Abs. 3 EStG beträgt die monatliche Grenze 1&nbsp;% der Bezugsgröße. Für 2026 entspricht das <strong>39,55&nbsp;€</strong> monatlich. Quelle: <a href="https://www.gesetze-im-internet.de/estg/__93.html" target="_blank" rel="noopener">§ 93 EStG</a>.</div>
+      <div class="muted" style="margin-top:.4rem">Grenze für die Kleinbetragsrente: Dieser Simulator rechnet ausschließlich für Rentenbeginn ab <strong>2027</strong> und verwendet dafür die angehobene Grenze von <strong>1,5&nbsp;%</strong> der monatlichen Bezugsgröße. Bei unveränderter Bezugsgröße entspräche das auf Basis 2026 <strong>59,33&nbsp;€</strong> monatlich. Quellen: <a href="https://www.gesetze-im-internet.de/estg/__93.html" target="_blank" rel="noopener">§ 93 EStG</a> und <a href="https://www.bundesfinanzministerium.de/Content/DE/Gesetzestexte/Gesetze_Gesetzesvorhaben/Abteilungen/Abteilung_IV/21_Legislaturperiode/2025-12-01-Altersvorsorgereformgesetz/2-Regierungsentwurf.pdf?__blob=publicationFile&amp;v=2" target="_blank" rel="noopener">BMF-Regierungsentwurf vom 1. Dezember 2025</a>.</div>
+      <div class="muted optionalNote" style="margin-top:.25rem">Wichtige Änderung: Frühere Berechnungen mit <strong>1,0&nbsp;%</strong> werden in diesem Rechner nicht mehr unterstützt. Der Simulator verwendet ausschließlich die neue <strong>1,5-%</strong>-Grenze und akzeptiert deshalb nur Rentenbeginn ab <strong>2027</strong>.</div>
       <div class="muted" style="margin-top:.4rem">Der Rentenfaktor gibt an, wie viel Euro monatliche Rente 10.000&nbsp;€ Kapital erzeugen (z. B. Faktor 30 → bei 40.000&nbsp;€ Kapital = 120&nbsp;€ monatlich). Der Simulator verwendet standardmäßig den Rentenfaktor <strong>27,0</strong>; dieser Wert lässt sich anpassen.</div>
       <div class="muted" style="margin-top:.4rem">Der Simulator spielt mehrere Szenarien durch: Er kombiniert unterschiedliche jährliche Entwicklungen von Rentenfaktor und Bezugsgröße und berechnet jeweils die maximal zulässigen Kapitalbeträge . Nur wenn das Kapital zum Renteneintritt unter dieser Grenze liegt, ist eine einmalige Auszahlung möglich.</div>
       <div class="muted optionalNote" style="margin-top:.25rem">Tipp: Die Kleinbetragsregelung gilt pro Versicherer. Wenn ein Vertrag knapp an der Grenze liegt, kann ein zusätzlicher Vertrag bei einem anderen Anbieter eine Auszahlung ermöglichen — vorausgesetzt, die Anbieter fusionieren nicht bzw. geben Verträge nicht an dieselbe Abwicklungsgesellschaft weiter.</div>
@@ -307,10 +308,10 @@
       <details id="explanationCalc" class="advanced separateRow" open style="margin-top:.4rem">
         <summary style="cursor:pointer;font-weight:600">Berechnung</summary>
         <div class="mathBlockContainer" style="margin-top:.4rem">
-        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Grenze für Kleinbetragsrente 2026</mi><mo>=</mo><mfrac><mrow><mi>Jahresbezugsgröße Sozialversicherung</mi></mrow><mrow><mn>12</mn></mrow></mfrac><mo>·</mo><mn>0,01</mn></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Grenze für Kleinbetragsrente</mi><mo>=</mo><mfrac><mrow><mi>Jahresbezugsgröße Sozialversicherung</mi></mrow><mrow><mn>12</mn></mrow></mfrac><mo>·</mo><mn>0,015</mn></mrow></math></div>
         <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Jahre bis Renteneintritt</mi><mo>=</mo><mi>Jahr des Renteneintritts</mi><mo>−</mo><mn>2026</mn></mrow></math></div>
         <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierter Rentenfaktor</mi><mo>=</mo><mi>Rentenfaktor 2026</mi><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mi>Wachstumsrate Rentenfaktor</mi><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mi>Jahre bis Renteneintritt</mi></msup></mrow></math></div>
-        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi><mo>=</mo><mi>Grenze für Kleinbetragsrente 2026</mi><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mi>Wachstumsrate Bezugsgröße</mi><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mi>Jahre bis Renteneintritt</mi></msup></mrow></math></div>
+        <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi><mo>=</mo><mi>Basisgrenze für Kleinbetragsrente</mi><mo>·</mo><msup><mrow><mo>(</mo><mrow><mn>1</mn><mo>+</mo><mfrac><mi>Wachstumsrate Bezugsgröße</mi><mn>100</mn></mfrac></mrow><mo>)</mo></mrow><mi>Jahre bis Renteneintritt</mi></msup></mrow></math></div>
         <div class="mathBlock"><math xmlns="http://www.w3.org/1998/Math/MathML" class="mathFormula"><mrow><mi>Maximales Kapital</mi><mo>=</mo><mfrac><mrow><mi>Projektierte Grenze für Kleinbetragsrente</mi></mrow><mrow><mi>Projektierter Rentenfaktor</mi><mo>/</mo><mn>10000</mn></mrow></mfrac></mrow></math></div>
         </div>
       </details>
@@ -323,10 +324,10 @@
           <div class="field">
             <label for="rentenJahr">Jahr des Renteneintritts *</label>
             <div class="small">
-              <input id="rentenJahr" type="number" value="2035" min="2026" max="2100">
+              <input id="rentenJahr" type="number" value="2035" min="2027" max="2100">
             </div>
           </div>
-          <div id="yearWarning" role="alert" aria-live="assertive" style="display:none;color:#b91c1c;margin-top:.15rem;font-weight:600;font-size:.85rem;grid-column:1/-1">Der Simulator funktioniert nur für Renteneintrittsjahre ab 2026.</div>
+          <div id="yearWarning" role="alert" aria-live="assertive" style="display:none;color:#b91c1c;margin-top:.15rem;font-weight:600;font-size:.85rem;grid-column:1/-1">Der Simulator funktioniert nur für Renteneintrittsjahre ab 2027.</div>
 
           <details class="advanced separateRow" style="margin-top:.6rem; grid-column:1/-1">
             <summary style="cursor:pointer;font-weight:600">Erweiterte Optionen</summary>
@@ -379,9 +380,10 @@
     // Kapselung: Keine globalen Variablen
     // Defaults (wie im Java-Skript)
     const START_JAHR = 2026;
+    const MIN_RENTENJAHR = 2027;
     const BEZUGS_GROESSE_2026 = 47460.0; // Jahresbezugsgröße (Referenz)
-    // Grenze für Kleinbetragsrente B_2026 (1% der monatlichen Bezugsgröße für 2026): 47460 / 1200 = 39.55 €
-    const B_2026 = BEZUGS_GROESSE_2026 / 1200.0;
+    // Grenze für Kleinbetragsrente ab 2027 auf Basis 2026 (1,5% der monatlichen Bezugsgröße): 47460 / 800 = 59.325 €
+    const B_2026 = BEZUGS_GROESSE_2026 * 0.015 / 12.0;
     const FAKTOR_ENTWICKLUNG = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0];
     const BEZUGS_ENTWICKLUNG = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
 
@@ -410,9 +412,8 @@
       };
     }
 
-    // Kernberechnungen (keine Verhaltensänderung)
-    // Hinweis: Projektierte Grenze für Kleinbetragsrente (Grenze für Kleinbetragsrente). Basiswert Grenze für Kleinbetragsrente 2026 ist definiert als
-    // (Jahresbezugsgröße / 12) · 0.01 (z.B. 39.55 € für 2026). Projektierte Grenze für Kleinbetragsrente = Grenze für Kleinbetragsrente 2026 · (1 + Wachstumsrate Bezugsgröße / 100)^y
+    // Kernberechnungen
+    // Der Simulator unterstützt nur Rentenbeginn ab 2027 und rechnet durchgehend mit der angehobenen 1,5-%-Grenze.
     function computeMatrix(rentenJahr, rentenFaktor2026) {
       const years = rentenJahr - START_JAHR; // rentenJahr is validated to be >= START_JAHR
       const faktorValues = FAKTOR_ENTWICKLUNG.map(p => rentenFaktor2026 * Math.pow(1 + p / 100.0, years));
@@ -593,11 +594,11 @@
       const fEl = el.rentenFaktor;
       const y = yEl ? (parseInt(yEl.value, 10) || 2035) : 2035;
       const f = fEl ? (parseFloat(fEl.value) || 27.0) : 27.0;
-      // Validate year: Simulator only supports years >= START_JAHR (2026)
+      // Validate year: Simulator only supports years >= MIN_RENTENJAHR (2027)
       const yearWarningEl = el.yearWarning;
-      if (yEl && parseInt(yEl.value, 10) < START_JAHR) {
+      if (yEl && parseInt(yEl.value, 10) < MIN_RENTENJAHR) {
         if (yearWarningEl) {
-          yearWarningEl.textContent = `Der Simulator funktioniert nur für Renteneintrittsjahre ab ${START_JAHR}.`;
+          yearWarningEl.textContent = `Der Simulator funktioniert nur für Renteneintrittsjahre ab ${MIN_RENTENJAHR}.`;
           yearWarningEl.style.display = 'block';
         }
         // mark input visually
